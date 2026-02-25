@@ -36,15 +36,20 @@
         try {
             const res = await fetch(csvUrl);
             const data = await res.text();
-            const satirlar = data.split('\n');
+            
+            // Satırları ayırırken daha güvenli bir yöntem kullanıyoruz
+            const satirlar = data.split(/\r?\n/);
             
             satirlar.forEach((satir) => {
-                const sutun = satir.split(',');
-                if (sutun.length >= 3) {
-                    const tc = sutun[0].trim();
-                    const ad = sutun[1].trim();
-                    const devamsizlik = sutun[2].trim();
-                    // TC'yi anahtar yapıp ad ve devamsızlığı kaydediyoruz
+                // Eğer Excel'de sayılar virgüllü ise CSV bunu tırnak içinde gönderir (örn: "6,5")
+                // Bu regex, tırnak içindeki virgülleri bozmadan satırı böler
+                const sutun = satir.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+                
+                if (sutun && sutun.length >= 3) {
+                    const tc = sutun[0].replace(/"/g, "").trim();
+                    const ad = sutun[1].replace(/"/g, "").trim();
+                    let devamsizlik = sutun[2].replace(/"/g, "").trim();
+                    
                     ogrenciData[tc] = { ad: ad, gun: devamsizlik };
                 }
             });
@@ -63,6 +68,7 @@
             const ogrenci = ogrenciData[tc];
             sonucDiv.style.display = "block";
             sonucDiv.style.backgroundColor = "var(--success)";
+            // Virgüllü sayıların düzgün görünmesi için ek kontrol
             sonucDiv.innerHTML = `
                 <span class="name-label">${ogrenci.ad}</span>
                 <span class="absent-label">Toplam Devamsızlık: <b>${ogrenci.gun} Gün</b></span>
@@ -79,3 +85,4 @@
 
 </body>
 </html>
+
