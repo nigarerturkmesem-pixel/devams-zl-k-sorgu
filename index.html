@@ -1,34 +1,38 @@
-
 <!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Öğrenci Sorgulama</title>
+    <title>Öğrenci Devamsızlık Sorgulama</title>
     <style>
         :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; --success: #dcfce7; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: white; padding: 2rem; border-radius: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 90%; max-width: 380px; text-align: center; }
-        h2 { color: var(--primary); margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; margin-bottom: 15px; box-sizing: border-box; font-size: 16px; text-align: center; }
-        button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; }
-        #sonuc { margin-top: 20px; padding: 15px; border-radius: 12px; display: none; line-height: 1.6; }
-        .status { font-size: 12px; color: #64748b; margin-bottom: 10px; }
-        .name-label { font-size: 1.2rem; font-weight: bold; color: #1e293b; display: block; margin-bottom: 5px; }
-        .absent-label { font-size: 1.1rem; color: #155724; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: white; padding: 2.5rem; border-radius: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 90%; max-width: 380px; text-align: center; border: 1px solid #e2e8f0; }
+        h2 { color: var(--primary); margin-bottom: 5px; font-size: 1.5rem; }
+        .status { font-size: 12px; color: #64748b; margin-bottom: 20px; font-weight: 500; }
+        input { width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 12px; margin-bottom: 15px; box-sizing: border-box; font-size: 18px; text-align: center; letter-spacing: 1px; outline: none; transition: border-color 0.2s; }
+        input:focus { border-color: var(--primary); }
+        button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 16px; transition: opacity 0.2s; }
+        button:hover { opacity: 0.9; }
+        button:disabled { background: #cbd5e1; cursor: not-allowed; }
+        #sonuc { margin-top: 25px; padding: 20px; border-radius: 15px; display: none; animation: slideIn 0.3s ease-out; }
+        .name-label { font-size: 1.3rem; font-weight: bold; color: #1e293b; display: block; margin-bottom: 8px; text-transform: uppercase; }
+        .absent-label { font-size: 1.1rem; color: #155724; display: block; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>Devamsızlık Sorgula</h2>
+    <h2>Sorgulama Paneli</h2>
     <div class="status" id="status">● Sistem Yükleniyor...</div>
-    <input type="text" id="tcInput" placeholder="T.C. Kimlik No Giriniz" maxlength="11">
-    <button id="sorgulaBtn" onclick="sorgula()" disabled>Sorgula</button>
+    <input type="text" id="tcInput" placeholder="T.C. Kimlik No" maxlength="11">
+    <button id="sorgulaBtn" onclick="sorgula()" disabled>SORGULA</button>
     <div id="sonuc"></div>
 </div>
 
 <script>
+    // Paylaştığın CSV Adresi
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSNIYTSZIgdE8jFsC9s3nA29_Q-Dlp5ytoDxzJ7dhw5FuEig0h9wIjEA4m0It_7vCuVPyd7RoVpjoFj/pub?gid=0&single=true&output=csv';
     let ogrenciData = {};
 
@@ -37,52 +41,11 @@
             const res = await fetch(csvUrl);
             const data = await res.text();
             
-            // Satırları ayırırken daha güvenli bir yöntem kullanıyoruz
-            const satirlar = data.split(/\r?\n/);
+            // Satırları ayır (boş satırları filtrele)
+            const satirlar = data.split(/\r?\n/).filter(line => line.trim() !== "");
             
-            satirlar.forEach((satir) => {
-                // Eğer Excel'de sayılar virgüllü ise CSV bunu tırnak içinde gönderir (örn: "6,5")
-                // Bu regex, tırnak içindeki virgülleri bozmadan satırı böler
-                const sutun = satir.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+            satirlar.forEach((satir, index) => {
+                if (index === 0) return; // Başlığı atla
                 
-                if (sutun && sutun.length >= 3) {
-                    const tc = sutun[0].replace(/"/g, "").trim();
-                    const ad = sutun[1].replace(/"/g, "").trim();
-                    let devamsizlik = sutun[2].replace(/"/g, "").trim();
-                    
-                    ogrenciData[tc] = { ad: ad, gun: devamsizlik };
-                }
-            });
-            document.getElementById('status').innerHTML = "<span style='color:green'>● Sistem Hazır</span>";
-            document.getElementById('sorgulaBtn').disabled = false;
-        } catch (e) {
-            document.getElementById('status').innerText = "Veri yüklenemedi!";
-        }
-    }
-
-    function sorgula() {
-        const tc = document.getElementById('tcInput').value.trim();
-        const sonucDiv = document.getElementById('sonuc');
-        
-        if (ogrenciData[tc]) {
-            const ogrenci = ogrenciData[tc];
-            sonucDiv.style.display = "block";
-            sonucDiv.style.backgroundColor = "var(--success)";
-            // Virgüllü sayıların düzgün görünmesi için ek kontrol
-            sonucDiv.innerHTML = `
-                <span class="name-label">${ogrenci.ad}</span>
-                <span class="absent-label">Toplam Devamsızlık: <b>${ogrenci.gun} Gün</b></span>
-            `;
-        } else {
-            sonucDiv.style.display = "block";
-            sonucDiv.style.backgroundColor = "#fee2e2";
-            sonucDiv.innerHTML = "❌ Kayıt bulunamadı!";
-        }
-    }
-
-    verileriGetir();
-</script>
-
-</body>
-</html>
-
+                // Virgül sorununu (6,5 gibi) çözmek için tırnak içindeki değerleri koruyan regex
+                const sutun = satir.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/
