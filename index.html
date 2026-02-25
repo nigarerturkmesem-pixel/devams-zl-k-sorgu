@@ -30,7 +30,6 @@
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSNIYTSZIgdE8jFsC9s3nA29_Q-Dlp5ytoDxzJ7dhw5FuEig0h9wIjEA4m0It_7vCuVPyd7RoVpjoFj/pub?gid=0&single=true&output=csv';
     let ogrenciData = {};
 
-    // CSV satırlarını doğru şekilde parçalayan fonksiyon
     function csvToArray(text) {
         let p = '', Array = [[]], Symbol = ',', i = 0, l = 0, q = false;
         for (let character of text) {
@@ -46,17 +45,16 @@
         try {
             const res = await fetch(csvUrl);
             const data = await res.text();
-            
             const satirlar = csvToArray(data);
             
             satirlar.forEach((sutun, index) => {
-                if (index === 0) return; // Başlığı atla
+                if (index === 0) return;
                 
                 if (sutun && sutun.length >= 3) {
                     const tc = sutun[0]?.trim();
                     const ad = sutun[1]?.trim();
-                    // Buradaki virgülü noktaya çevirmiyoruz, Excel'de neyse o gelsin
-                    double devamsizlik = sutun[2]?.trim();
+                    // HATALI KISIM BURASIYDI: "double" yerine "const" kullandık.
+                    const devamsizlik = sutun[2]?.trim();
                     
                     if(tc) {
                         ogrenciData[tc] = { ad: ad, gun: devamsizlik };
@@ -96,4 +94,3 @@
 
 </body>
 </html>
-
