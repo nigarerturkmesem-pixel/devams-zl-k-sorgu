@@ -1,34 +1,30 @@
+
 <!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Öğrenci Sorgulama Sistemi</title>
+    <title>Öğrenci Sorgulama</title>
     <style>
-        :root { --primary: #1e40af; --bg: #f1f5f9; --text: #0f172a; --success: #dcfce7; --error: #fee2e2; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: white; padding: 2.5rem; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 90%; max-width: 420px; text-align: center; border: 1px solid #e2e8f0; }
-        h2 { font-size: 1.4rem; margin-bottom: 0.5rem; color: var(--primary); }
-        .info-text { font-size: 0.85rem; color: #64748b; margin-bottom: 1.5rem; }
-        input { width: 100%; padding: 0.9rem; border: 2px solid #e2e8f0; border-radius: 0.5rem; margin-bottom: 1rem; box-sizing: border-box; font-size: 1.1rem; text-align: center; letter-spacing: 2px; }
-        input:focus { border-color: var(--primary); outline: none; }
-        button { width: 100%; padding: 0.9rem; background: var(--primary); color: white; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; font-size: 1rem; transition: background 0.3s; }
-        button:hover { background: #1e3a8a; }
-        button:disabled { background: #94a3b8; }
-        #sonuc { margin-top: 1.5rem; padding: 1.5rem; border-radius: 0.6rem; display: none; text-align: left; animation: fadeIn 0.4s; }
-        .data-row { margin-bottom: 10px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 5px; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; --success: #dcfce7; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: white; padding: 2rem; border-radius: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 90%; max-width: 380px; text-align: center; }
+        h2 { color: var(--primary); margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; margin-bottom: 15px; box-sizing: border-box; font-size: 16px; text-align: center; }
+        button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; }
+        #sonuc { margin-top: 20px; padding: 15px; border-radius: 12px; display: none; line-height: 1.6; }
+        .status { font-size: 12px; color: #64748b; margin-bottom: 10px; }
+        .name-label { font-size: 1.2rem; font-weight: bold; color: #1e293b; display: block; margin-bottom: 5px; }
+        .absent-label { font-size: 1.1rem; color: #155724; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>Öğrenci Bilgi Sistemi</h2>
-    <p class="info-text" id="status">Veritabanı yükleniyor...</p>
-    
-    <input type="text" id="tcInput" placeholder="T.C. Kimlik No" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+    <h2>Devamsızlık Sorgula</h2>
+    <div class="status" id="status">● Sistem Yükleniyor...</div>
+    <input type="text" id="tcInput" placeholder="T.C. Kimlik No Giriniz" maxlength="11">
     <button id="sorgulaBtn" onclick="sorgula()" disabled>Sorgula</button>
-    
     <div id="sonuc"></div>
 </div>
 
@@ -36,57 +32,49 @@
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSNIYTSZIgdE8jFsC9s3nA29_Q-Dlp5ytoDxzJ7dhw5FuEig0h9wIjEA4m0It_7vCuVPyd7RoVpjoFj/pub?gid=0&single=true&output=csv';
     let ogrenciData = {};
 
-    async function verileriCek() {
+    async function verileriGetir() {
         try {
             const res = await fetch(csvUrl);
-            const csvText = await res.text();
-            const satirlar = csvText.split('\n');
+            const data = await res.text();
+            const satirlar = data.split('\n');
             
-            satirlar.forEach((satir, index) => {
-                if (index === 0) return; // Başlık satırını atla
+            satirlar.forEach((satir) => {
                 const sutun = satir.split(',');
                 if (sutun.length >= 3) {
                     const tc = sutun[0].trim();
-                    const adSoyad = sutun[1].trim();
+                    const ad = sutun[1].trim();
                     const devamsizlik = sutun[2].trim();
-                    ogrenciData[tc] = { ad: adSoyad, gun: devamsizlik };
+                    // TC'yi anahtar yapıp ad ve devamsızlığı kaydediyoruz
+                    ogrenciData[tc] = { ad: ad, gun: devamsizlik };
                 }
             });
-            document.getElementById('status').innerText = "TC numaranızı girerek sorgulayabilirsiniz.";
+            document.getElementById('status').innerHTML = "<span style='color:green'>● Sistem Hazır</span>";
             document.getElementById('sorgulaBtn').disabled = false;
         } catch (e) {
-            document.getElementById('status').innerText = "Bağlantı hatası oluştu.";
+            document.getElementById('status').innerText = "Veri yüklenemedi!";
         }
     }
 
     function sorgula() {
-        const tc = document.getElementById('tcInput').value;
+        const tc = document.getElementById('tcInput').value.trim();
         const sonucDiv = document.getElementById('sonuc');
         
-        if (tc.length !== 11) {
-            alert("Lütfen 11 haneli T.C. numaranızı giriniz.");
-            return;
-        }
-
-        sonucDiv.style.display = "block";
-
         if (ogrenciData[tc]) {
             const ogrenci = ogrenciData[tc];
-            sonucDiv.innerHTML = `
-                <div class="data-row"><b>👤 Ad Soyad:</b><br>${ogrenci.ad}</div>
-                <div class="data-row"><b>🆔 T.C. No:</b><br>${tc}</div>
-                <div style="color:#1e40af"><b>📊 Devamsızlık:</b> <span style="font-size:1.5rem; font-weight:bold">${ogrenci.gun} Gün</span></div>
-            `;
+            sonucDiv.style.display = "block";
             sonucDiv.style.backgroundColor = "var(--success)";
-            sonucDiv.style.color = "#166534";
+            sonucDiv.innerHTML = `
+                <span class="name-label">${ogrenci.ad}</span>
+                <span class="absent-label">Toplam Devamsızlık: <b>${ogrenci.gun} Gün</b></span>
+            `;
         } else {
-            sonucDiv.innerHTML = "❌ Kayıt bulunamadı. Lütfen bilgilerinizi kontrol edin.";
-            sonucDiv.style.backgroundColor = "var(--error)";
-            sonucDiv.style.color = "#991b1b";
+            sonucDiv.style.display = "block";
+            sonucDiv.style.backgroundColor = "#fee2e2";
+            sonucDiv.innerHTML = "❌ Kayıt bulunamadı!";
         }
     }
 
-    verileriCek();
+    verileriGetir();
 </script>
 
 </body>
