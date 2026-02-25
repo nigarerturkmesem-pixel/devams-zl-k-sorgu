@@ -3,30 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Öğrenci Devamsızlık Sistemi</title>
+    <title>Öğrenci Sorgulama Sistemi</title>
     <style>
-        :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; --success: #dcfce7; --error: #fee2e2; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: white; padding: 2.5rem; border-radius: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; border: 1px solid #e2e8f0; }
-        h1 { font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--primary); }
-        .subtitle { font-size: 0.9rem; color: #64748b; margin-bottom: 2rem; }
-        input { width: 100%; padding: 0.8rem; border: 2px solid #e2e8f0; border-radius: 0.75rem; margin-bottom: 1rem; box-sizing: border-box; font-size: 1rem; outline: none; transition: border-color 0.2s; }
-        input:focus { border-color: var(--primary); }
-        button { width: 100%; padding: 0.8rem; background: var(--primary); color: white; border: none; border-radius: 0.75rem; font-weight: 600; cursor: pointer; transition: transform 0.1s, opacity 0.2s; font-size: 1rem; }
-        button:active { transform: scale(0.98); }
-        button:disabled { background: #94a3b8; cursor: not-allowed; }
-        #sonuc { margin-top: 1.5rem; padding: 1.2rem; border-radius: 0.75rem; display: none; font-size: 1.1rem; line-height: 1.5; }
-        .status-dot { height: 10px; width: 10px; background-color: #bbb; border-radius: 50%; display: inline-block; margin-right: 5px; }
-        .online { background-color: #22c55e; }
+        :root { --primary: #1e40af; --bg: #f1f5f9; --text: #0f172a; --success: #dcfce7; --error: #fee2e2; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: white; padding: 2.5rem; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 90%; max-width: 420px; text-align: center; border: 1px solid #e2e8f0; }
+        h2 { font-size: 1.4rem; margin-bottom: 0.5rem; color: var(--primary); }
+        .info-text { font-size: 0.85rem; color: #64748b; margin-bottom: 1.5rem; }
+        input { width: 100%; padding: 0.9rem; border: 2px solid #e2e8f0; border-radius: 0.5rem; margin-bottom: 1rem; box-sizing: border-box; font-size: 1.1rem; text-align: center; letter-spacing: 2px; }
+        input:focus { border-color: var(--primary); outline: none; }
+        button { width: 100%; padding: 0.9rem; background: var(--primary); color: white; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; font-size: 1rem; transition: background 0.3s; }
+        button:hover { background: #1e3a8a; }
+        button:disabled { background: #94a3b8; }
+        #sonuc { margin-top: 1.5rem; padding: 1.5rem; border-radius: 0.6rem; display: none; text-align: left; animation: fadeIn 0.4s; }
+        .data-row { margin-bottom: 10px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 5px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h1>Devamsızlık Sorgula</h1>
-    <div class="subtitle"><span id="dot" class="status-dot"></span> <span id="status">Veriler yükleniyor...</span></div>
+    <h2>Öğrenci Bilgi Sistemi</h2>
+    <p class="info-text" id="status">Veritabanı yükleniyor...</p>
     
-    <input type="text" id="noInput" placeholder="Okul Numaranızı Giriniz" onkeypress="handleKeyPress(event)">
+    <input type="text" id="tcInput" placeholder="T.C. Kimlik No" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
     <button id="sorgulaBtn" onclick="sorgula()" disabled>Sorgula</button>
     
     <div id="sonuc"></div>
@@ -34,56 +34,59 @@
 
 <script>
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSNIYTSZIgdE8jFsC9s3nA29_Q-Dlp5ytoDxzJ7dhw5FuEig0h9wIjEA4m0It_7vCuVPyd7RoVpjoFj/pub?gid=0&single=true&output=csv';
-    let dataMap = {};
+    let ogrenciData = {};
 
-    // Excel verilerini çekme
-    async function verileriYukle() {
+    async function verileriCek() {
         try {
-            const response = await fetch(csvUrl);
-            const data = await response.text();
-            const satirlar = data.split('\n');
+            const res = await fetch(csvUrl);
+            const csvText = await res.text();
+            const satirlar = csvText.split('\n');
             
-            satirlar.forEach(satir => {
-                const sutunlar = satir.split(',');
-                if (sutunlar.length >= 2) {
-                    const no = sutunlar[0].trim();
-                    const devamsizlik = sutunlar[1].trim();
-                    dataMap[no] = devamsizlik;
+            satirlar.forEach((satir, index) => {
+                if (index === 0) return; // Başlık satırını atla
+                const sutun = satir.split(',');
+                if (sutun.length >= 3) {
+                    const tc = sutun[0].trim();
+                    const adSoyad = sutun[1].trim();
+                    const devamsizlik = sutun[2].trim();
+                    ogrenciData[tc] = { ad: adSoyad, gun: devamsizlik };
                 }
             });
-
-            document.getElementById('status').innerText = "Sistem Hazır";
-            document.getElementById('dot').classList.add('online');
+            document.getElementById('status').innerText = "TC numaranızı girerek sorgulayabilirsiniz.";
             document.getElementById('sorgulaBtn').disabled = false;
-        } catch (error) {
-            document.getElementById('status').innerText = "Bağlantı Hatası!";
-            console.error("Hata:", error);
+        } catch (e) {
+            document.getElementById('status').innerText = "Bağlantı hatası oluştu.";
         }
     }
 
     function sorgula() {
-        const input = document.getElementById('noInput').value.trim();
+        const tc = document.getElementById('tcInput').value;
         const sonucDiv = document.getElementById('sonuc');
         
+        if (tc.length !== 11) {
+            alert("Lütfen 11 haneli T.C. numaranızı giriniz.");
+            return;
+        }
+
         sonucDiv.style.display = "block";
 
-        if (dataMap[input]) {
-            sonucDiv.innerHTML = `Öğrenci No: <strong>${input}</strong><br>Devamsızlık: <strong style="font-size: 1.5rem;">${dataMap[input]}</strong> Gün`;
+        if (ogrenciData[tc]) {
+            const ogrenci = ogrenciData[tc];
+            sonucDiv.innerHTML = `
+                <div class="data-row"><b>👤 Ad Soyad:</b><br>${ogrenci.ad}</div>
+                <div class="data-row"><b>🆔 T.C. No:</b><br>${tc}</div>
+                <div style="color:#1e40af"><b>📊 Devamsızlık:</b> <span style="font-size:1.5rem; font-weight:bold">${ogrenci.gun} Gün</span></div>
+            `;
             sonucDiv.style.backgroundColor = "var(--success)";
             sonucDiv.style.color = "#166534";
         } else {
-            sonucDiv.innerHTML = "❌ Numara bulunamadı!";
+            sonucDiv.innerHTML = "❌ Kayıt bulunamadı. Lütfen bilgilerinizi kontrol edin.";
             sonucDiv.style.backgroundColor = "var(--error)";
             sonucDiv.style.color = "#991b1b";
         }
     }
 
-    function handleKeyPress(e) {
-        if (e.key === 'Enter') sorgula();
-    }
-
-    // Sayfa yüklenince başlat
-    verileriYukle();
+    verileriCek();
 </script>
 
 </body>
