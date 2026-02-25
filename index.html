@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Devamsızlık Sorgulama</title>
+    <title>Öğrenci Sorgulama Paneli</title>
     <style>
         :root { --primary: #2563eb; --bg: #f8fafc; --success: #dcfce7; }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
@@ -11,16 +11,16 @@
         h2 { color: var(--primary); margin-bottom: 20px; }
         input { width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 12px; margin-bottom: 15px; box-sizing: border-box; font-size: 18px; text-align: center; outline: none; }
         button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 16px; }
-        #sonuc { margin-top: 25px; padding: 20px; border-radius: 15px; display: none; }
-        .name-label { font-size: 1.3rem; font-weight: bold; display: block; margin-bottom: 8px; color: #1e293b; }
-        .absent-label { font-size: 1.2rem; color: #155724; }
+        #sonuc { margin-top: 25px; padding: 20px; border-radius: 15px; display: none; border: 1px solid transparent; }
+        .name-label { font-size: 1.2rem; font-weight: bold; display: block; margin-bottom: 8px; color: #1e293b; text-transform: uppercase; }
+        .absent-label { font-size: 1.1rem; color: #155724; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>Öğrenci Sorgulama</h2>
-    <div id="status" style="font-size:12px; margin-bottom:10px; color:#64748b;">Veriler Yükleniyor...</div>
+    <h2>Devamsızlık Sorgula</h2>
+    <div id="status" style="font-size:12px; margin-bottom:10px; color:#64748b;">Veriler Hazırlanıyor...</div>
     <input type="text" id="tcInput" placeholder="T.C. Kimlik No">
     <button id="sorgulaBtn" onclick="sorgula()" disabled>SORGULA</button>
     <div id="sonuc"></div>
@@ -30,26 +30,37 @@
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSNIYTSZIgdE8jFsC9s3nA29_Q-Dlp5ytoDxzJ7dhw5FuEig0h9wIjEA4m0It_7vCuVPyd7RoVpjoFj/pub?gid=0&single=true&output=csv';
     let ogrenciData = {};
 
+    // CSV satırlarını doğru şekilde parçalayan fonksiyon
+    function csvToArray(text) {
+        let p = '', Array = [[]], Symbol = ',', i = 0, l = 0, q = false;
+        for (let character of text) {
+            if (character === '"') { q = !q; }
+            else if (character === Symbol && !q) { p = ''; Array[i][++l] = p; }
+            else if (character === '\n' && !q) { if (Array[i][l] === undefined) { Array[i][l] = p; } p = ''; Array[++i] = [p]; l = 0; }
+            else { p += character; Array[i][l] = p; }
+        }
+        return Array;
+    }
+
     async function verileriGetir() {
         try {
             const res = await fetch(csvUrl);
             const data = await res.text();
             
-            // Satırları ayır
-            const satirlar = data.split(/\r?\n/);
+            const satirlar = csvToArray(data);
             
-            satirlar.forEach((satir) => {
-                // ÖNEMLİ: CSV virgülle ayrılmış olsa bile 6,5 gibi sayıları tırnak içinde gönderir.
-                // Bu Regex tırnak içindeki virgülleri görmezden gelir.
-                const sutun = satir.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+            satirlar.forEach((sutun, index) => {
+                if (index === 0) return; // Başlığı atla
                 
                 if (sutun && sutun.length >= 3) {
-                    const tc = sutun[0].replace(/"/g, "").trim();
-                    const ad = sutun[1].replace(/"/g, "").trim();
-                    // Devamsızlık sütununu olduğu gibi alıyoruz (6,5 ise 6,5 kalır)
-                    const devamsizlik = sutun[2].replace(/"/g, "").trim();
+                    const tc = sutun[0]?.trim();
+                    const ad = sutun[1]?.trim();
+                    // Buradaki virgülü noktaya çevirmiyoruz, Excel'de neyse o gelsin
+                    const devamsizlik = sutun[2]?.trim();
                     
-                    ogrenciData[tc] = { ad: ad, gun: devamsizlik };
+                    if(tc) {
+                        ogrenciData[tc] = { ad: ad, gun: devamsizlik };
+                    }
                 }
             });
             document.getElementById('status').innerHTML = "● Sistem Hazır";
@@ -67,6 +78,7 @@
             const ogrenci = ogrenciData[input];
             sonucDiv.style.display = "block";
             sonucDiv.style.backgroundColor = "var(--success)";
+            sonucDiv.style.borderColor = "#bbf7d0";
             sonucDiv.innerHTML = `
                 <span class="name-label">${ogrenci.ad}</span>
                 <span class="absent-label">Toplam Devamsızlık: <b>${ogrenci.gun} Gün</b></span>
@@ -74,7 +86,8 @@
         } else {
             sonucDiv.style.display = "block";
             sonucDiv.style.backgroundColor = "#fee2e2";
-            sonucDiv.innerHTML = "❌ Kayıt bulunamadı!";
+            sonucDiv.style.borderColor = "#fecaca";
+            sonucDiv.innerHTML = "<b style='color:#991b1b'>❌ Kayıt bulunamadı!</b>";
         }
     }
 
