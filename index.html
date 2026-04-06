@@ -72,4 +72,49 @@
                     const tc = sutun[0]?.trim();
                     const ad = sutun[1]?.trim();
                     const okulDev = sutun[2]?.trim();
-                    const isyeriDev = sutun
+                    const isyeriDev = sutun[3]?.trim(); 
+                    const durum = sutun[4]?.trim() || "BİLGİ YOK"; 
+                    
+                    if(tc) {
+                        ogrenciData[tc] = { 
+                            ad: ad, 
+                            okul: okulDev, 
+                            isyeri: isyeriDev,
+                            durum: durum 
+                        };
+                    }
+                }
+            });
+            document.getElementById('status').innerHTML = "● Sistem Hazır";
+            document.getElementById('sorgulaBtn').disabled = false;
+        } catch (e) {
+            document.getElementById('status').innerText = "Bağlantı Hatası!";
+        }
+    }
+
+    function sorgula() {
+        const input = document.getElementById('tcInput').value.trim();
+        const sonucDiv = document.getElementById('sonuc');
+        
+        if (ogrenciData[input]) {
+            const ogrenci = ogrenciData[input];
+            sonucDiv.style.display = "block";
+            sonucDiv.innerHTML = `
+                <span class="name-label">${ogrenci.ad}</span>
+                <div class="info-row"><span>Okul Devamsızlık:</span> <b>${ogrenci.okul} GÜN</b></div>
+                <div class="info-row"><span>İşyeri Devamsızlık:</span> <b>${ogrenci.isyeri} GÜN</b></div>
+                <div class="status-box">${ogrenci.durum}</div>
+            `;
+        } else {
+            sonucDiv.style.display = "block";
+            sonucDiv.style.backgroundColor = "var(--danger)";
+            sonucDiv.innerHTML = "<div style='text-align:center; color:#991b1b; font-weight:bold;'>❌ KAYIT BULUNAMADI!</div>";
+        }
+    }
+
+    document.getElementById('tcInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') sorgula(); });
+    verileriGetir();
+</script>
+
+</body>
+</html>
