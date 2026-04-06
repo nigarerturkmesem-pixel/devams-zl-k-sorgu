@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Öğrenci Sorgulama Paneli</title>
     <style>
-        :root { --primary: #2563eb; --bg: #f8fafc; --success: #dcfce7; --danger: #fee2e2; }
+        :root { --primary: #2563eb; --bg: #f8fafc; --success: #ffffff; --danger: #fee2e2; }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         .card { background: white; padding: 2.5rem; border-radius: 1.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 90%; max-width: 400px; text-align: center; border: 1px solid #e2e8f0; }
         h2 { color: var(--primary); margin-bottom: 20px; font-size: 1.5rem; }
@@ -14,12 +14,24 @@
         button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 16px; transition: opacity 0.3s; }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
         
-        #sonuc { margin-top: 25px; padding: 20px; border-radius: 15px; display: none; border: 1px solid transparent; text-align: left; }
-        .name-label { font-size: 1.2rem; font-weight: bold; display: block; margin-bottom: 12px; color: #1e293b; text-transform: uppercase; text-align: center; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 8px; }
+        #sonuc { margin-top: 25px; padding: 20px; border-radius: 15px; display: none; border: 1px solid #cbd5e1; text-align: left; background-color: #fff; }
+        .name-label { font-size: 1.2rem; font-weight: bold; display: block; margin-bottom: 12px; color: #1e293b; text-transform: uppercase; text-align: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
         .info-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.95rem; color: #475569; }
         .info-row b { color: #1e293b; }
         
-        .status-box { margin-top: 15px; padding: 10px; border-radius: 10px; text-align: center; font-weight: bold; background: white; border: 1px solid #cbd5e1; color: #1e293b; text-transform: uppercase; }
+        /* DURUM KISMI İÇİN ÖZEL STİL */
+        .status-box { 
+            margin-top: 15px; 
+            padding: 12px; 
+            border-radius: 10px; 
+            text-align: center; 
+            font-weight: 900; /* Çok kalın */
+            font-size: 1.2rem; 
+            color: #dc2626; /* Kırmızı renk */
+            background: #fef2f2; /* Hafif kırmızımsı arka plan */
+            border: 2px solid #fecaca; 
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
@@ -60,53 +72,4 @@
                     const tc = sutun[0]?.trim();
                     const ad = sutun[1]?.trim();
                     const okulDev = sutun[2]?.trim();
-                    const isyeriDev = sutun[3]?.trim(); // 4. Sütun (D) -> İşyeri
-                    const durum = sutun[4]?.trim() || "BİLGİ YOK"; // 5. Sütun (E) -> Durum
-                    
-                    if(tc) {
-                        ogrenciData[tc] = { 
-                            ad: ad, 
-                            okul: okulDev, 
-                            isyeri: isyeriDev,
-                            durum: durum 
-                        };
-                    }
-                }
-            });
-            document.getElementById('status').innerHTML = "● Sistem Hazır";
-            document.getElementById('sorgulaBtn').disabled = false;
-        } catch (e) {
-            document.getElementById('status').innerText = "Bağlantı Hatası!";
-        }
-    }
-
-    function sorgula() {
-        const input = document.getElementById('tcInput').value.trim();
-        const sonucDiv = document.getElementById('sonuc');
-        
-        if (ogrenciData[input]) {
-            const ogrenci = ogrenciData[input];
-            sonucDiv.style.display = "block";
-            sonucDiv.style.backgroundColor = "var(--success)";
-            sonucDiv.style.borderColor = "#bbf7d0";
-            sonucDiv.innerHTML = `
-                <span class="name-label">${ogrenci.ad}</span>
-                <div class="info-row"><span>Okul Devamsızlık:</span> <b>${ogrenci.okul} GÜN</b></div>
-                <div class="info-row"><span>İşyeri Devamsızlık:</span> <b>${ogrenci.isyeri} GÜN</b></div>
-                <div class="status-box">DURUM: ${ogrenci.durum}</div>
-            `;
-        } else {
-            sonucDiv.style.display = "block";
-            sonucDiv.style.backgroundColor = "var(--danger)";
-            sonucDiv.style.borderColor = "#fecaca";
-            sonucDiv.innerHTML = "<div style='text-align:center'><b style='color:#991b1b'>❌ KAYIT BULUNAMADI!</b></div>";
-        }
-    }
-
-    document.getElementById('tcInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') sorgula(); });
-
-    verileriGetir();
-</script>
-
-</body>
-</html>
+                    const isyeriDev = sutun
