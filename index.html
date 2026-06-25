@@ -1,3 +1,10 @@
+Hemen **7. sütuna (Sütun İndeksi: 6)** göre güncelliyorum.
+
+Google E-Tablonuzdaki **G sütununa** denk gelen bu veriyi çekmek için koddaki veri indeksini `sutun[6]` olarak ayarladım. Diğer tüm sütunların düzeni (TC, Ad, Okul, İşyeri, Durum) aynen korunurken, bu 7. sütunda bir şey yazıyorsa panelde doğrudan görüntülenecek, boşsa yine gizli kalacaktır.
+
+İşte güncellenmiş tam kodunuz:
+
+```html
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -25,12 +32,25 @@
             padding: 12px; 
             border-radius: 10px; 
             text-align: center; 
-            font-weight: 900; /* Çok kalın */
+            font-weight: 900; 
             font-size: 1.2rem; 
-            color: #dc2626; /* Kırmızı renk */
-            background: #fef2f2; /* Hafif kırmızımsı arka plan */
+            color: #dc2626; 
+            background: #fef2f2; 
             border: 2px solid #fecaca; 
             text-transform: uppercase;
+        }
+
+        /* 7. SÜTUN İÇİN ÖZEL STİL (BİLGİ VARSA GÖRÜNECEK) */
+        .ek-bilgi-box {
+            margin-top: 12px;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #f0fdf4; /* Hafif yeşil tonu */
+            border: 1px dashed #bbf7d0;
+            color: #166534;
+            font-size: 0.95rem;
+            font-weight: bold;
+            text-align: center;
         }
     </style>
 </head>
@@ -49,8 +69,9 @@
     let ogrenciData = {};
 
     function csvToArray(text) {
+        let cleanText = text.replace(/\r/g, "");
         let p = '', Array = [[]], Symbol = ',', i = 0, l = 0, q = false;
-        for (let character of text) {
+        for (let character of cleanText) {
             if (character === '"') { q = !q; }
             else if (character === Symbol && !q) { p = ''; Array[i][++l] = p; }
             else if (character === '\n' && !q) { if (Array[i][l] === undefined) { Array[i][l] = p; } p = ''; Array[++i] = [p]; l = 0; }
@@ -68,19 +89,22 @@
             satirlar.forEach((sutun, index) => {
                 if (index === 0) return;
                 
+                // 7. sütunun da okunabilmesi için satır uzunluğu kontrolü
                 if (sutun && sutun.length >= 5) {
                     const tc = sutun[0]?.trim();
                     const ad = sutun[1]?.trim();
                     const okulDev = sutun[2]?.trim();
                     const isyeriDev = sutun[3]?.trim(); 
                     const durum = sutun[4]?.trim() || "BİLGİ YOK"; 
+                    const ekBilgi = sutun[6]?.trim() || ""; // sutun[6] -> Dizideki 7. elemandır (G Sütunu)
                     
                     if(tc) {
                         ogrenciData[tc] = { 
                             ad: ad, 
                             okul: okulDev, 
                             isyeri: isyeriDev,
-                            durum: durum 
+                            durum: durum,
+                            ekBilgi: ekBilgi 
                         };
                     }
                 }
@@ -99,12 +123,21 @@
         if (ogrenciData[input]) {
             const ogrenci = ogrenciData[input];
             sonucDiv.style.display = "block";
-            sonucDiv.innerHTML = `
+            sonucDiv.style.backgroundColor = "#fff";
+            
+            let sonucHTML = `
                 <span class="name-label">${ogrenci.ad}</span>
                 <div class="info-row"><span>Okul Devamsızlık:</span> <b>${ogrenci.okul} GÜN</b></div>
                 <div class="info-row"><span>İşyeri Devamsızlık:</span> <b>${ogrenci.isyeri} GÜN</b></div>
                 <div class="status-box">${ogrenci.durum}</div>
             `;
+
+            // 7. SÜTUNDA VERİ VARSA HTML İÇERİSİNE EKLE
+            if (ogrenci.ekBilgi !== "") {
+                sonucHTML += `<div class="ek-bilgi-box">${ogrenci.ekBilgi}</div>`;
+            }
+            
+            sonucDiv.innerHTML = sonucHTML;
         } else {
             sonucDiv.style.display = "block";
             sonucDiv.style.backgroundColor = "var(--danger)";
@@ -118,3 +151,5 @@
 
 </body>
 </html>
+
+```
