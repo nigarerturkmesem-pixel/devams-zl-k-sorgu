@@ -1,10 +1,3 @@
-Hemen **7. sütuna (Sütun İndeksi: 6)** göre güncelliyorum.
-
-Google E-Tablonuzdaki **G sütununa** denk gelen bu veriyi çekmek için koddaki veri indeksini `sutun[6]` olarak ayarladım. Diğer tüm sütunların düzeni (TC, Ad, Okul, İşyeri, Durum) aynen korunurken, bu 7. sütunda bir şey yazıyorsa panelde doğrudan görüntülenecek, boşsa yine gizli kalacaktır.
-
-İşte güncellenmiş tam kodunuz:
-
-```html
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -40,12 +33,12 @@ Google E-Tablonuzdaki **G sütununa** denk gelen bu veriyi çekmek için koddaki
             text-transform: uppercase;
         }
 
-        /* 7. SÜTUN İÇİN ÖZEL STİL (BİLGİ VARSA GÖRÜNECEK) */
+        /* 7. SÜTUN İÇİN ÖZEL STİL */
         .ek-bilgi-box {
             margin-top: 12px;
             padding: 10px;
             border-radius: 8px;
-            background-color: #f0fdf4; /* Hafif yeşil tonu */
+            background-color: #f0fdf4; 
             border: 1px dashed #bbf7d0;
             color: #166534;
             font-size: 0.95rem;
@@ -89,14 +82,16 @@ Google E-Tablonuzdaki **G sütununa** denk gelen bu veriyi çekmek için koddaki
             satirlar.forEach((sutun, index) => {
                 if (index === 0) return;
                 
-                // 7. sütunun da okunabilmesi için satır uzunluğu kontrolü
-                if (sutun && sutun.length >= 5) {
+                // En az TC ve İsim sütunları (sutun.length >= 2) doluysa işleme al diyerek esnettik
+                if (sutun && sutun.length >= 2) {
                     const tc = sutun[0]?.trim();
                     const ad = sutun[1]?.trim();
-                    const okulDev = sutun[2]?.trim();
-                    const isyeriDev = sutun[3]?.trim(); 
+                    const okulDev = sutun[2]?.trim() || "0";
+                    const isyeriDev = sutun[3]?.trim() || "0"; 
                     const durum = sutun[4]?.trim() || "BİLGİ YOK"; 
-                    const ekBilgi = sutun[6]?.trim() || ""; // sutun[6] -> Dizideki 7. elemandır (G Sütunu)
+                    
+                    // Dizide 7. eleman var mı kontrol et, yoksa boş ata (Hata vermesini engeller)
+                    const ekBilgi = (sutun.length > 6 && sutun[6]) ? sutun[6].trim() : ""; 
                     
                     if(tc) {
                         ogrenciData[tc] = { 
@@ -132,8 +127,8 @@ Google E-Tablonuzdaki **G sütununa** denk gelen bu veriyi çekmek için koddaki
                 <div class="status-box">${ogrenci.durum}</div>
             `;
 
-            // 7. SÜTUNDA VERİ VARSA HTML İÇERİSİNE EKLE
-            if (ogrenci.ekBilgi !== "") {
+            // 7. SÜTUNDA YAZI VARSA VE BOŞ DEĞİLSE EKRAna BAS
+            if (ogrenci.ekBilgi && ogrenci.ekBilgi !== "") {
                 sonucHTML += `<div class="ek-bilgi-box">${ogrenci.ekBilgi}</div>`;
             }
             
@@ -151,5 +146,3 @@ Google E-Tablonuzdaki **G sütununa** denk gelen bu veriyi çekmek için koddaki
 
 </body>
 </html>
-
-```
