@@ -19,7 +19,7 @@
         .info-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.95rem; color: #475569; }
         .info-row b { color: #1e293b; }
         
-        /* DURUM KISMI İÇİN ÖZEL STİL */
+        /* ORTAK DURUM KUTUSU STİLİ */
         .status-box { 
             margin-top: 15px; 
             padding: 12px; 
@@ -31,20 +31,6 @@
             background: #fef2f2; 
             border: 2px solid #fecaca; 
             text-transform: uppercase;
-        }
-
-        /* SADECE G SÜTUNU DOLUYKEN GÖSTERİLECEK ÖZEL BÜYÜK MESAJ KUTUSU */
-        .ozel-mesaj-box {
-            margin-top: 10px;
-            padding: 18px;
-            border-radius: 12px;
-            background-color: #fff7ed; /* Hafif turuncu/sarı sıcak ton */
-            border: 2px dashed #fed7aa;
-            color: #c2410c;
-            font-size: 1.1rem;
-            font-weight: bold;
-            text-align: center;
-            line-height: 1.5;
         }
     </style>
 </head>
@@ -58,7 +44,7 @@
     <div id="sonuc"></div>
 </div>
 
-<script {timestamp="2026-06-25"}>
+<script>
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSNIYTSZIgdE8jFsC9s3nA29_Q-Dlp5ytoDxzJ7dhw5FuEig0h9wIjEA4m0It_7vCuVPyd7RoVpjoFj/pub?gid=0&single=true&output=csv';
     let ogrenciData = {};
 
@@ -90,7 +76,7 @@
                     const isyeriDev = sutun[3]?.trim() || "0"; 
                     const durum = sutun[4]?.trim() || "BİLGİ YOK"; 
                     
-                    // G Sütunu kontrolü (Dizideki 7. eleman -> indeks 6)
+                    // G Sütunu kontrolü (İndeks: 6)
                     const ekBilgi = (sutun.length > 6 && sutun[6]) ? sutun[6].trim() : ""; 
                     
                     if(tc) {
@@ -120,26 +106,20 @@
             sonucDiv.style.display = "block";
             sonucDiv.style.backgroundColor = "#fff";
             
-            let sonucHTML = "";
-
-            // EĞER G SÜTUNU (ekBilgi) DOLUYSA: Sadece İsmi ve G Sütunundaki Yazıyı Göster
+            // Kutuda gösterilecek metni seçiyoruz (Öncelik G Sütununda)
+            let gosterilecekDurum = "";
             if (ogrenci.ekBilgi && ogrenci.ekBilgi !== "") {
-                sonucHTML = `
-                    <span class="name-label">${ogrenci.ad}</span>
-                    <div class="ozel-mesaj-box">${ogrenci.ekBilgi}</div>
-                `;
-            } 
-            // EĞER G SÜTUNU BOŞSA: Eski düzende normal devamsızlık bilgilerini göster
-            else {
-                sonucHTML = `
-                    <span class="name-label">${ogrenci.ad}</span>
-                    <div class="info-row"><span>Okul Devamsızlık:</span> <b>${ogrenci.okul} GÜN</b></div>
-                    <div class="info-row"><span>İşyeri Devamsızlık:</span> <b>${ogrenci.isyeri} GÜN</b></div>
-                    <div class="status-box">${ogrenci.durum}</div>
-                `;
+                gosterilecekDurum = ogrenci.ekBilgi; // G sütunu doluysa onu al
+            } else {
+                gosterilecekDurum = ogrenci.durum;    // G sütunu boşsa normal Durumu al
             }
             
-            sonucDiv.innerHTML = sonucHTML;
+            sonucDiv.innerHTML = `
+                <span class="name-label">${ogrenci.ad}</span>
+                <div class="info-row"><span>Okul Devamsızlık:</span> <b>${ogrenci.okul} GÜN</b></div>
+                <div class="info-row"><span>İşyeri Devamsızlık:</span> <b>${ogrenci.isyeri} GÜN</b></div>
+                <div class="status-box">${gosterilecekDurum}</div>
+            `;
         } else {
             sonucDiv.style.display = "block";
             sonucDiv.style.backgroundColor = "var(--danger)";
